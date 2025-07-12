@@ -54,9 +54,9 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 25)
-title.Text = "Egg Reseter"
+title.Text = "Egg Predictor by Neon"
 title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.Antique
+title.Font = Enum.Font.GothamBold
 title.TextSize = 19
 title.BackgroundTransparency = 1
 
@@ -66,7 +66,7 @@ box.Position = UDim2.new(0.05, 0, 0.25, 0)
 box.PlaceholderText = "Egg Name (e.g. Common Egg)"
 box.TextSize = 19
 box.Text = ""
-box.Font = Enum.Font.Antique
+box.Font = Enum.Font.GothamBold
 box.TextColor3 = Color3.new(1, 1, 1)
 box.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
@@ -76,7 +76,7 @@ btn.Size = UDim2.new(0.9, 0, 0, 30)
 btn.Position = UDim2.new(0.05, 0, 0.65, 0)
 btn.Text = "Reset Egg"
 btn.TextSize = 19
-btn.Font = Enum.Font.Antique
+btn.Font = Enum.Font.GothamBold
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.BackgroundColor3 = Color3.fromRGB(70, 130, 70)
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
@@ -113,7 +113,7 @@ btn.MouseButton1Click:Connect(function()
             lbl.TextColor3 = Color3.new(1, 1, 1)
             lbl.TextStrokeTransparency = 0
             lbl.TextSize = 19
-            lbl.Font = Enum.Font.Antique
+            lbl.Font = Enum.Font.GothamBold
         end
     end
 
