@@ -1,15 +1,13 @@
--- 🐣 Rayfield GUI Version of Egg Randomizer (Executor Ready)
-
 local Players = game:GetService("Players")
 local CollectionService = game:GetService("CollectionService")
+local lp = Players.LocalPlayer
+local guiParent = game:GetService("CoreGui")
 
-local localPlayer = Players.LocalPlayer
-while not localPlayer do task.wait() localPlayer = Players.LocalPlayer end
+if guiParent:FindFirstChild("MiniEggGUI") then
+    guiParent.MiniEggGUI:Destroy()
+end
 
--- 📦 Load Rayfield UI Library
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield``))()
-
--- 🌿 Egg chances table
+-- Full Egg Chances
 local eggChances = {
     ["Common Egg"] = { ["Golden Lab"] = 33.33, ["Dog"] = 33.33, ["Bunny"] = 33.33 },
     ["Common Summer Egg"] = { ["Starfish"] = 50, ["Seagull"] = 25, ["Crab"] = 25 },
@@ -27,81 +25,105 @@ local eggChances = {
     ["Night Egg"] = { ["Hedgehog"] = 49, ["Mole"] = 22, ["Frog"] = 14, ["Echo Frog"] = 10, ["Night Owl"] = 4, ["Reccoon"] = 1 }
 }
 
--- 🧱 Create Rayfield Window
-local Window = Rayfield:CreateWindow({
-    Name = "Grow A Garden ESP",
-    LoadingTitle = "Initializing GUI...",
-    LoadingSubtitle = "by Blazeghast",
-    ConfigurationSaving = {
-        Enabled = false
-    },
-    Discord = {
-        Enabled = false
-    },
-    KeySystem = false
-})
-
-local Tab = Window:CreateTab("Egg ESP")
-
-local selectedEgg = ""
-
-Tab:CreateInput({
-    Name = "Egg Name",
-    PlaceholderText = "Type exact egg name",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(text)
-        selectedEgg = text
+-- Random Pet Picker
+local function randomPet(eggType)
+    local pets = eggChances[eggType]
+    if not pets then return nil end
+    local total, roll = 0, 0
+    for _, chance in pairs(pets) do total += chance end
+    roll = math.random() * total
+    local cumulative = 0
+    for pet, chance in pairs(pets) do
+        cumulative += chance
+        if roll <= cumulative then return pet end
     end
-})
+end
 
-Tab:CreateButton({
-    Name = "🎲 Randomize ESP",
-    Callback = function()
-        local pool = eggChances[selectedEgg]
-        if not pool then
-            Rayfield:Notify({Title = "Invalid Egg", Content = "That egg type doesn't exist.", Duration = 4})
-            return
-        end
+-- GUI Setup
+local gui = Instance.new("ScreenGui", guiParent)
+gui.Name = "MiniEggGUI"
+gui.ResetOnSpawn = false
 
-        for _, egg in pairs(CollectionService:GetTagged("PetEggServer")) do
-            if egg:GetAttribute("EggName") == selectedEgg and egg:GetAttribute("OWNER") == localPlayer.Name then
-                local total, entries = 0, {}
-                for pet, chance in pairs(pool) do
-                    total += chance
-                    table.insert(entries, {pet = pet, weight = chance})
-                end
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 240, 0, 140)
+frame.Position = UDim2.new(0, 50, 0, 120)
+frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
-                local roll, cumulative = math.random() * total, 0
-                local chosenPet = entries[1].pet
-                for _, entry in ipairs(entries) do
-                    cumulative += entry.weight
-                    if roll <= cumulative then
-                        chosenPet = entry.pet
-                        break
-                    end
-                end
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 25)
+title.Text = "🐣 Egg ESP Tool"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.BackgroundTransparency = 1
+title.TextScaled = true
 
-                local existing = egg:FindFirstChild("FakePetESP")
-                if existing then existing:Destroy() end
+local box = Instance.new("TextBox", frame)
+box.Size = UDim2.new(0.9, 0, 0, 30)
+box.Position = UDim2.new(0.05, 0, 0.25, 0)
+box.PlaceholderText = "Egg Name (e.g. Common Egg)"
+box.TextScaled = true
+box.Text = ""
+box.Font = Enum.Font.Gotham
+box.TextColor3 = Color3.new(1, 1, 1)
+box.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
 
-                local billboard = Instance.new("BillboardGui")
-                billboard.Name = "FakePetESP"
-                billboard.Adornee = egg:FindFirstChildWhichIsA("BasePart") or egg.PrimaryPart or egg
-                billboard.Size = UDim2.new(0, 200, 0, 50)
-                billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-                billboard.AlwaysOnTop = true
-                billboard.Parent = egg
+local btn = Instance.new("TextButton", frame)
+btn.Size = UDim2.new(0.9, 0, 0, 30)
+btn.Position = UDim2.new(0.05, 0, 0.65, 0)
+btn.Text = "🎲 Randomize ESP"
+btn.TextScaled = true
+btn.Font = Enum.Font.GothamBold
+btn.TextColor3 = Color3.new(1, 1, 1)
+btn.BackgroundColor3 = Color3.fromRGB(70, 130, 70)
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
-                local label = Instance.new("TextLabel")
-                label.Size = UDim2.new(1, 0, 1, 0)
-                label.BackgroundTransparency = 1
-                label.TextColor3 = Color3.fromRGB(255, 255, 255)
-                label.TextStrokeTransparency = 0
-                label.TextScaled = true
-                label.Font = Enum.Font.GothamBold
-                label.Text = selectedEgg .. " | " .. chosenPet
-                label.Parent = billboard
-            end
+-- Cooldown
+local cooldown = false
+
+btn.MouseButton1Click:Connect(function()
+    if cooldown then
+        btn.Text = "⏳ Wait..."
+        return
+    end
+
+    local eggName = box.Text
+    local pet = randomPet(eggName)
+    if not pet then
+        box.Text = "❌ Invalid Egg!"
+        return
+    end
+
+    for _, egg in pairs(CollectionService:GetTagged("PetEggServer")) do
+        if egg:GetAttribute("EggName") == eggName and egg:GetAttribute("OWNER") == lp.Name then
+            local old = egg:FindFirstChild("FakePetESP")
+            if old then old:Destroy() end
+
+            local gui = Instance.new("BillboardGui", egg)
+            gui.Name = "FakePetESP"
+            gui.Adornee = egg:FindFirstChildWhichIsA("BasePart") or egg.PrimaryPart or egg
+            gui.Size = UDim2.new(0, 200, 0, 50)
+            gui.StudsOffset = Vector3.new(0, 2.5, 0)
+            gui.AlwaysOnTop = true
+
+            local lbl = Instance.new("TextLabel", gui)
+            lbl.Size = UDim2.new(1, 0, 1, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = eggName .. " | " .. pet
+            lbl.TextColor3 = Color3.new(1, 1, 1)
+            lbl.TextStrokeTransparency = 0
+            lbl.TextScaled = true
+            lbl.Font = Enum.Font.GothamBold
         end
     end
-})
+
+    cooldown = true
+    btn.Text = "⏳ Cooling down..."
+    task.delay(8, function()
+        cooldown = false
+        btn.Text = "🎲 Randomize ESP"
+    end)
+end)
