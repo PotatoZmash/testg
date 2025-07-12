@@ -22,7 +22,8 @@ local eggChances = {
     ["Uncommon Egg"] = { ["Black Bunny"] = 25, ["Chicken"] = 25, ["Cat"] = 25, ["Deer"] = 25 },
     ["Rare Egg"] = { ["Orange Tabby"] = 33.33, ["Spotted Deer"] = 25, ["Pig"] = 16.67, ["Rooster"] = 16.67, ["Monkey"] = 8.33 },
     ["Legendary Egg"] = { ["Cow"] = 42.55, ["Silver Monkey"] = 42.55, ["Sea Otter"] = 10.64, ["Turtle"] = 2.13, ["Polar Bear"] = 2.13 },
-    ["Night Egg"] = { ["Hedgehog"] = 49, ["Mole"] = 22, ["Frog"] = 14, ["Echo Frog"] = 10, ["Night Owl"] = 4, ["Reccoon"] = 1 }
+    ["Night Egg"] = { ["Hedgehog"] = 49, ["Mole"] = 22, ["Frog"] = 14, ["Echo Frog"] = 10, ["Night Owl"] = 4, ["Raccoon"] = 1 },
+    ["Primal Egg"] = { ["Parasaurolophus"] = 35, ["Iguanodon"] = 32.5, ["Pachycephalosaurus"] = 28, ["Dilophosaurus"] = 3, ["Ankylosaurus"] = 1, ["Spinosaurus"] = 0.5, }
 }
 
 -- 🎲 Weighted Pet Randomizer
