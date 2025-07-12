@@ -1,11 +1,25 @@
--- 🐣 Full Styled GUI with Dirt Background for Egg Randomizer
+-- 🐣 Full Styled GUI with Dirt Background for Egg Randomizer (Executor-Optimized)
 
 local Players = game:GetService("Players")
 local CollectionService = game:GetService("CollectionService")
-local localPlayer = Players.LocalPlayer
-local playerGui = localPlayer:WaitForChild("PlayerGui")
 
--- 🌿 Egg chances table (use your updated one here)
+-- 🧩 Fix for executor environments (wait for LocalPlayer and PlayerGui)
+local localPlayer = Players.LocalPlayer
+while not localPlayer do
+    task.wait()
+    localPlayer = Players.LocalPlayer
+end
+
+local playerGui = localPlayer:FindFirstChild("PlayerGui")
+while not playerGui do
+    task.wait()
+    playerGui = localPlayer:FindFirstChild("PlayerGui")
+end
+
+-- Use PlayerGui or fallback to CoreGui
+local guiParent = playerGui or game:GetService("CoreGui")
+
+-- 🌿 Egg chances table
 local eggChances = {
     ["Common Egg"] = { ["Golden Lab"] = 33.33, ["Dog"] = 33.33, ["Bunny"] = 33.33 },
     ["Common Summer Egg"] = { ["Starfish"] = 50, ["Seagull"] = 25, ["Crab"] = 25 },
@@ -34,7 +48,7 @@ dirtBackground.ImageTransparency = 0.05
 dirtBackground.ImageColor3 = Color3.fromRGB(110, 75, 40)
 dirtBackground.ScaleType = Enum.ScaleType.Tile
 dirtBackground.TileSize = UDim2.new(0, 50, 0, 50)
-dirtBackground.Parent = playerGui
+dirtBackground.Parent = guiParent
 
 -- 🌿 Main GUI Frame
 local mainFrame = Instance.new("Frame")
