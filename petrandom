@@ -7,7 +7,7 @@ if guiParent:FindFirstChild("MiniEggGUI") then
     guiParent.MiniEggGUI:Destroy()
 end
 
--- Full Egg Chances
+-- 🥚 Full Egg Chances
 local eggChances = {
     ["Common Egg"] = { ["Golden Lab"] = 33.33, ["Dog"] = 33.33, ["Bunny"] = 33.33 },
     ["Common Summer Egg"] = { ["Starfish"] = 50, ["Seagull"] = 25, ["Crab"] = 25 },
@@ -25,7 +25,7 @@ local eggChances = {
     ["Night Egg"] = { ["Hedgehog"] = 49, ["Mole"] = 22, ["Frog"] = 14, ["Echo Frog"] = 10, ["Night Owl"] = 4, ["Reccoon"] = 1 }
 }
 
--- Random Pet Picker
+-- 🎲 Weighted Pet Randomizer
 local function randomPet(eggType)
     local pets = eggChances[eggType]
     if not pets then return nil end
@@ -45,7 +45,7 @@ gui.Name = "MiniEggGUI"
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 240, 0, 140)
+frame.Size = UDim2.new(0, 250, 0, 150)
 frame.Position = UDim2.new(0, 50, 0, 120)
 frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 frame.Active = true
@@ -54,7 +54,7 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 25)
-title.Text = "🐣 Egg ESP Tool"
+title.Text = "🐣 Egg ESP Randomizer"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.GothamBold
 title.BackgroundTransparency = 1
@@ -81,14 +81,11 @@ btn.TextColor3 = Color3.new(1, 1, 1)
 btn.BackgroundColor3 = Color3.fromRGB(70, 130, 70)
 Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
--- Cooldown
+-- Cooldown with countdown text
 local cooldown = false
 
 btn.MouseButton1Click:Connect(function()
-    if cooldown then
-        btn.Text = "⏳ Wait..."
-        return
-    end
+    if cooldown then return end
 
     local eggName = box.Text
     local pet = randomPet(eggName)
@@ -121,8 +118,14 @@ btn.MouseButton1Click:Connect(function()
     end
 
     cooldown = true
-    btn.Text = "⏳ Cooling down..."
-    task.delay(8, function()
+    local countdown = 8
+    btn.Text = "⏳ Cooldown: " .. countdown .. "s"
+    task.spawn(function()
+        while countdown > 0 do
+            task.wait(1)
+            countdown -= 1
+            btn.Text = "⏳ Cooldown: " .. countdown .. "s"
+        end
         cooldown = false
         btn.Text = "🎲 Randomize ESP"
     end)
