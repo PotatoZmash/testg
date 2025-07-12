@@ -1,0 +1,569 @@
+-- Pet Randomizer GUI for Roblox
+local players = game:GetService("Players")
+local collectionService = game:GetService("CollectionService")
+local tweenService = game:GetService("TweenService")
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+
+local localPlayer = players.LocalPlayer or players:GetPlayers()[1]
+
+-- Your original egg chances data
+local eggChances = {
+    ["Common Egg"] = {["Dog"] = 33, ["Bunny"] = 33, ["Golden Lab"] = 33},
+    ["Uncommon Egg"] = {["Black Bunny"] = 25, ["Chicken"] = 25, ["Cat"] = 25, ["Deer"] = 25},
+    ["Rare Egg"] = {["Orange Tabby"] = 33.33, ["Spotted Deer"] = 25, ["Pig"] = 16.67, ["Rooster"] = 16.67, ["Monkey"] = 8.33},
+    ["Legendary Egg"] = {["Cow"] = 42.55, ["Silver Monkey"] = 42.55, ["Sea Otter"] = 10.64, ["Turtle"] = 2.13, ["Polar Bear"] = 2.13},
+    ["Mythic Egg"] = {["Grey Mouse"] = 37.5, ["Brown Mouse"] = 26.79, ["Squirrel"] = 26.79, ["Red Giant Ant"] = 8.93, ["Red Fox"] = 0},
+    ["Bug Egg"] = {["Snail"] = 40, ["Giant Ant"] = 35, ["Caterpillar"] = 25, ["Praying Mantis"] = 0, ["Dragon Fly"] = 0},
+    ["Night Egg"] = {["Hedgehog"] = 47, ["Mole"] = 23.5, ["Frog"] = 21.16, ["Echo Frog"] = 8.35, ["Night Owl"] = 0, ["Raccoon"] = 0},
+    ["Bee Egg"] = {["Bee"] = 65, ["Honey Bee"] = 20, ["Bear Bee"] = 10, ["Petal Bee"] = 5, ["Queen Bee"] = 0},
+    ["Anti Bee Egg"] = {["Wasp"] = 55, ["Tarantula Hawk"] = 31, ["Moth"] = 14, ["Butterfly"] = 0, ["Disco Bee"] = 0},
+    ["Common Summer Egg"] = {["Starfish"] = 50, ["Seafull"] = 25, ["Crab"] = 25},
+    ["Rare Summer Egg"] = {["Flamingo"] = 30, ["Toucan"] = 25, ["Sea Turtle"] = 20, ["Orangutan"] = 15, ["Seal"] = 10},
+    ["Paradise Egg"] = {["Ostrich"] = 43, ["Peacock"] = 33, ["Capybara"] = 24, ["Scarlet Macaw"] = 3, ["Mimic Octopus"] = 1},
+    ["Premium Night Egg"] = {["Hedgehog"] = 50, ["Mole"] = 26, ["Frog"] = 14, ["Echo Frog"] = 10},
+    ["Dinosaur Egg"] = {["Raptor"] = 33, ["Triceratops"] = 33, ["T-Rex"] = 1, ["Stegosaurus"] = 33, ["Pterodactyl"] = 33, ["Brontosaurus"] = 33}
+}
+
+local realESP = {
+    ["Common Egg"] = true, ["Uncommon Egg"] = true, ["Rare Egg"] = true,
+    ["Common Summer Egg"] = true, ["Rare Summer Egg"] = true
+}
+
+local displayedEggs = {}
+local autoStopOn = true
+local guiVisible = true
+
+-- Weighted random function
+local function weightedRandom(options)
+    local valid = {}
+    for pet, chance in pairs(options) do
+        if chance > 0 then table.insert(valid, {pet = pet, chance = chance}) end
+    end
+    if #valid == 0 then return nil end
+    local total = 0
+    for _, v in ipairs(valid) do total += v.chance end
+    local roll = math.random() * total
+    local cumulative = 0
+    for _, v in ipairs(valid) do
+        cumulative += v.chance
+        if roll <= cumulative then return v.pet end
+    end
+    return valid[1].pet
+end
+
+-- Non-repeating random pet function
+local function getNonRepeatingRandomPet(eggName, lastPet)
+    local pool = eggChances[eggName]
+    if not pool then return nil end
+    local tries, selectedPet = 0, lastPet
+    while tries < 5 do
+        local pet = weightedRandom(pool)
+        if not pet then return nil end
+        if pet ~= lastPet or math.random() < 0.3 then
+            selectedPet = pet
+            break
+        end
+        tries += 1
+    end
+    return selectedPet
+end
+
+-- Create ESP GUI
+local function createEspGui(object, labelText)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "FakePetESP"
+    billboard.Adornee = object:FindFirstChildWhichIsA("BasePart") or object.PrimaryPart or object
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.AlwaysOnTop = true
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    label.Text = labelText
+    label.Parent = billboard
+
+    billboard.Parent = object
+    return billboard
+end
+
+-- Add ESP
+local function addESP(egg)
+    if egg:GetAttribute("OWNER") ~= localPlayer.Name then return end
+    local eggName = egg:GetAttribute("EggName")
+    local objectId = egg:GetAttribute("OBJECT_UUID")
+    if not eggName or not objectId or displayedEggs[objectId] then return end
+
+    local labelText, firstPet
+    if realESP[eggName] then
+        labelText = eggName
+    else
+        firstPet = getNonRepeatingRandomPet(eggName, nil)
+        labelText = eggName .. " | " .. (firstPet or "?")
+    end
+
+    local espGui = createEspGui(egg, labelText)
+    displayedEggs[objectId] = {
+        egg = egg,
+        gui = espGui,
+        label = espGui:FindFirstChild("TextLabel"),
+        eggName = eggName,
+        lastPet = firstPet
+    }
+end
+
+-- Remove ESP
+local function removeESP(egg)
+    local objectId = egg:GetAttribute("OBJECT_UUID")
+    if objectId and displayedEggs[objectId] then
+        displayedEggs[objectId].gui:Destroy()
+        displayedEggs[objectId] = nil
+    end
+end
+
+-- Create main GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "PetRandomizerGUI"
+gui.ResetOnSpawn = false
+gui.Parent = localPlayer:WaitForChild("PlayerGui")
+
+-- Main frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 400, 0, 600)
+mainFrame.Position = UDim2.new(0, 10, 0.5, -300)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = gui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = mainFrame
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+title.Text = "🥚 Pet Randomizer GUI"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 10)
+titleCorner.Parent = title
+
+-- Control buttons frame
+local controlFrame = Instance.new("Frame")
+controlFrame.Name = "ControlFrame"
+controlFrame.Size = UDim2.new(1, -20, 0, 100)
+controlFrame.Position = UDim2.new(0, 10, 0, 50)
+controlFrame.BackgroundTransparency = 1
+controlFrame.Parent = mainFrame
+
+-- Auto stop button
+local autoStopBtn = Instance.new("TextButton")
+autoStopBtn.Name = "AutoStopBtn"
+autoStopBtn.Size = UDim2.new(1, 0, 0, 30)
+autoStopBtn.Position = UDim2.new(0, 0, 0, 0)
+autoStopBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+autoStopBtn.Text = "Auto Stop: ON"
+autoStopBtn.TextColor3 = Color3.new(1, 1, 1)
+autoStopBtn.TextScaled = true
+autoStopBtn.Font = Enum.Font.SourceSans
+autoStopBtn.Parent = controlFrame
+
+local autoStopCorner = Instance.new("UICorner")
+autoStopCorner.CornerRadius = UDim.new(0, 5)
+autoStopCorner.Parent = autoStopBtn
+
+-- Reroll button
+local rerollBtn = Instance.new("TextButton")
+rerollBtn.Name = "RerollBtn"
+rerollBtn.Size = UDim2.new(1, 0, 0, 30)
+rerollBtn.Position = UDim2.new(0, 0, 0, 35)
+rerollBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+rerollBtn.Text = "Reroll Pet Display"
+rerollBtn.TextColor3 = Color3.new(1, 1, 1)
+rerollBtn.TextScaled = true
+rerollBtn.Font = Enum.Font.SourceSans
+rerollBtn.Parent = controlFrame
+
+local rerollCorner = Instance.new("UICorner")
+rerollCorner.CornerRadius = UDim.new(0, 5)
+rerollCorner.Parent = rerollBtn
+
+-- Info button
+local infoBtn = Instance.new("TextButton")
+infoBtn.Name = "InfoBtn"
+infoBtn.Size = UDim2.new(1, 0, 0, 30)
+infoBtn.Position = UDim2.new(0, 0, 0, 70)
+infoBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+infoBtn.Text = "ℹ️ Info"
+infoBtn.TextColor3 = Color3.new(1, 1, 1)
+infoBtn.TextScaled = true
+infoBtn.Font = Enum.Font.SourceSans
+infoBtn.Parent = controlFrame
+
+local infoCorner = Instance.new("UICorner")
+infoCorner.CornerRadius = UDim.new(0, 5)
+infoCorner.Parent = infoBtn
+
+-- Egg simulator frame
+local simulatorFrame = Instance.new("Frame")
+simulatorFrame.Name = "SimulatorFrame"
+simulatorFrame.Size = UDim2.new(1, -20, 0, 120)
+simulatorFrame.Position = UDim2.new(0, 10, 0, 160)
+simulatorFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+simulatorFrame.Parent = mainFrame
+
+local simCorner = Instance.new("UICorner")
+simCorner.CornerRadius = UDim.new(0, 5)
+simCorner.Parent = simulatorFrame
+
+-- Simulator title
+local simTitle = Instance.new("TextLabel")
+simTitle.Name = "SimTitle"
+simTitle.Size = UDim2.new(1, 0, 0, 25)
+simTitle.Position = UDim2.new(0, 0, 0, 5)
+simTitle.BackgroundTransparency = 1
+simTitle.Text = "🎲 Egg Simulator"
+simTitle.TextColor3 = Color3.new(1, 1, 1)
+simTitle.TextScaled = true
+simTitle.Font = Enum.Font.SourceSansBold
+simTitle.Parent = simulatorFrame
+
+-- Egg dropdown
+local eggDropdown = Instance.new("TextButton")
+eggDropdown.Name = "EggDropdown"
+eggDropdown.Size = UDim2.new(1, -20, 0, 25)
+eggDropdown.Position = UDim2.new(0, 10, 0, 30)
+eggDropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+eggDropdown.Text = "Select Egg..."
+eggDropdown.TextColor3 = Color3.new(1, 1, 1)
+eggDropdown.TextScaled = true
+eggDropdown.Font = Enum.Font.SourceSans
+eggDropdown.Parent = simulatorFrame
+
+local dropdownCorner = Instance.new("UICorner")
+dropdownCorner.CornerRadius = UDim.new(0, 3)
+dropdownCorner.Parent = eggDropdown
+
+-- Simulate button
+local simulateBtn = Instance.new("TextButton")
+simulateBtn.Name = "SimulateBtn"
+simulateBtn.Size = UDim2.new(1, -20, 0, 25)
+simulateBtn.Position = UDim2.new(0, 10, 0, 60)
+simulateBtn.BackgroundColor3 = Color3.fromRGB(76, 175, 80)
+simulateBtn.Text = "🥚 Open Egg!"
+simulateBtn.TextColor3 = Color3.new(1, 1, 1)
+simulateBtn.TextScaled = true
+simulateBtn.Font = Enum.Font.SourceSansBold
+simulateBtn.Parent = simulatorFrame
+
+local simulateBtnCorner = Instance.new("UICorner")
+simulateBtnCorner.CornerRadius = UDim.new(0, 3)
+simulateBtnCorner.Parent = simulateBtn
+
+-- Result label
+local resultLabel = Instance.new("TextLabel")
+resultLabel.Name = "ResultLabel"
+resultLabel.Size = UDim2.new(1, -20, 0, 25)
+resultLabel.Position = UDim2.new(0, 10, 0, 90)
+resultLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+resultLabel.Text = "Select an egg to simulate..."
+resultLabel.TextColor3 = Color3.new(1, 1, 1)
+resultLabel.TextScaled = true
+resultLabel.Font = Enum.Font.SourceSans
+resultLabel.Parent = simulatorFrame
+
+local resultCorner = Instance.new("UICorner")
+resultCorner.CornerRadius = UDim.new(0, 3)
+resultCorner.Parent = resultLabel
+
+-- Egg list frame
+local eggListFrame = Instance.new("ScrollingFrame")
+eggListFrame.Name = "EggListFrame"
+eggListFrame.Size = UDim2.new(1, -20, 1, -290)
+eggListFrame.Position = UDim2.new(0, 10, 0, 290)
+eggListFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+eggListFrame.BorderSizePixel = 0
+eggListFrame.ScrollBarThickness = 8
+eggListFrame.Parent = mainFrame
+
+local eggListCorner = Instance.new("UICorner")
+eggListCorner.CornerRadius = UDim.new(0, 5)
+eggListCorner.Parent = eggListFrame
+
+local eggListLayout = Instance.new("UIListLayout")
+eggListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+eggListLayout.Padding = UDim.new(0, 5)
+eggListLayout.Parent = eggListFrame
+
+-- Toggle button
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleBtn"
+toggleBtn.Size = UDim2.new(0, 30, 0, 30)
+toggleBtn.Position = UDim2.new(1, -40, 0, 10)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+toggleBtn.Text = "−"
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+toggleBtn.TextScaled = true
+toggleBtn.Font = Enum.Font.SourceSansBold
+toggleBtn.Parent = gui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 15)
+toggleCorner.Parent = toggleBtn
+
+-- Variables for dropdown
+local selectedEgg = nil
+local dropdownOpen = false
+
+-- Create dropdown list
+local function createDropdownList()
+    local dropdownList = Instance.new("Frame")
+    dropdownList.Name = "DropdownList"
+    dropdownList.Size = UDim2.new(1, 0, 0, 200)
+    dropdownList.Position = UDim2.new(0, 0, 1, 0)
+    dropdownList.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    dropdownList.BorderSizePixel = 0
+    dropdownList.Visible = false
+    dropdownList.Parent = eggDropdown
+    
+    local dropdownListCorner = Instance.new("UICorner")
+    dropdownListCorner.CornerRadius = UDim.new(0, 3)
+    dropdownListCorner.Parent = dropdownList
+    
+    local scrollingFrame = Instance.new("ScrollingFrame")
+    scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollingFrame.BackgroundTransparency = 1
+    scrollingFrame.ScrollBarThickness = 6
+    scrollingFrame.Parent = dropdownList
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = scrollingFrame
+    
+    local ySize = 0
+    for eggName, _ in pairs(eggChances) do
+        local option = Instance.new("TextButton")
+        option.Name = eggName
+        option.Size = UDim2.new(1, 0, 0, 25)
+        option.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        option.Text = eggName
+        option.TextColor3 = Color3.new(1, 1, 1)
+        option.TextScaled = true
+        option.Font = Enum.Font.SourceSans
+        option.Parent = scrollingFrame
+        
+        option.MouseButton1Click:Connect(function()
+            selectedEgg = eggName
+            eggDropdown.Text = eggName
+            dropdownList.Visible = false
+            dropdownOpen = false
+        end)
+        
+        ySize = ySize + 25
+    end
+    
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, ySize)
+    
+    return dropdownList
+end
+
+local dropdownList = createDropdownList()
+
+-- Populate egg list
+local function populateEggList()
+    for eggName, pets in pairs(eggChances) do
+        local eggFrame = Instance.new("Frame")
+        eggFrame.Name = eggName
+        eggFrame.Size = UDim2.new(1, 0, 0, 100)
+        eggFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        eggFrame.Parent = eggListFrame
+        
+        local eggFrameCorner = Instance.new("UICorner")
+        eggFrameCorner.CornerRadius = UDim.new(0, 5)
+        eggFrameCorner.Parent = eggFrame
+        
+        local eggTitle = Instance.new("TextLabel")
+        eggTitle.Name = "EggTitle"
+        eggTitle.Size = UDim2.new(1, 0, 0, 25)
+        eggTitle.Position = UDim2.new(0, 0, 0, 0)
+        eggTitle.BackgroundTransparency = 1
+        eggTitle.Text = eggName
+        eggTitle.TextColor3 = Color3.new(1, 1, 1)
+        eggTitle.TextScaled = true
+        eggTitle.Font = Enum.Font.SourceSansBold
+        eggTitle.Parent = eggFrame
+        
+        local petList = Instance.new("ScrollingFrame")
+        petList.Name = "PetList"
+        petList.Size = UDim2.new(1, -10, 1, -30)
+        petList.Position = UDim2.new(0, 5, 0, 25)
+        petList.BackgroundTransparency = 1
+        petList.ScrollBarThickness = 4
+        petList.Parent = eggFrame
+        
+        local petLayout = Instance.new("UIListLayout")
+        petLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        petLayout.Parent = petList
+        
+        local contentSize = 0
+        for petName, chance in pairs(pets) do
+            local petFrame = Instance.new("Frame")
+            petFrame.Name = petName
+            petFrame.Size = UDim2.new(1, 0, 0, 18)
+            petFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+            petFrame.Parent = petList
+            
+            local petFrameCorner = Instance.new("UICorner")
+            petFrameCorner.CornerRadius = UDim.new(0, 3)
+            petFrameCorner.Parent = petFrame
+            
+            local petLabel = Instance.new("TextLabel")
+            petLabel.Name = "PetLabel"
+            petLabel.Size = UDim2.new(0.7, 0, 1, 0)
+            petLabel.Position = UDim2.new(0, 5, 0, 0)
+            petLabel.BackgroundTransparency = 1
+            petLabel.Text = petName
+            petLabel.TextColor3 = Color3.new(1, 1, 1)
+            petLabel.TextScaled = true
+            petLabel.Font = Enum.Font.SourceSans
+            petLabel.TextXAlignment = Enum.TextXAlignment.Left
+            petLabel.Parent = petFrame
+            
+            local chanceLabel = Instance.new("TextLabel")
+            chanceLabel.Name = "ChanceLabel"
+            chanceLabel.Size = UDim2.new(0.3, -5, 1, 0)
+            chanceLabel.Position = UDim2.new(0.7, 0, 0, 0)
+            chanceLabel.BackgroundTransparency = 1
+            chanceLabel.Text = chance .. "%"
+            chanceLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+            chanceLabel.TextScaled = true
+            chanceLabel.Font = Enum.Font.SourceSans
+            chanceLabel.TextXAlignment = Enum.TextXAlignment.Right
+            chanceLabel.Parent = petFrame
+            
+            contentSize = contentSize + 18
+        end
+        
+        petList.CanvasSize = UDim2.new(0, 0, 0, contentSize)
+    end
+    
+    eggListFrame.CanvasSize = UDim2.new(0, 0, 0, eggListLayout.AbsoluteContentSize.Y)
+end
+
+-- Button functions
+autoStopBtn.MouseButton1Click:Connect(function()
+    autoStopOn = not autoStopOn
+    autoStopBtn.Text = autoStopOn and "Auto Stop: ON" or "Auto Stop: OFF"
+    autoStopBtn.BackgroundColor3 = autoStopOn and Color3.fromRGB(76, 175, 80) or Color3.fromRGB(244, 67, 54)
+end)
+
+rerollBtn.MouseButton1Click:Connect(function()
+    for objectId, data in pairs(displayedEggs) do
+        if not realESP[data.eggName] then
+            local pet = getNonRepeatingRandomPet(data.eggName, data.lastPet)
+            if pet and data.label then
+                data.label.Text = data.eggName .. " | " .. pet
+                data.lastPet = pet
+            end
+        end
+    end
+    
+    -- Visual feedback
+    rerollBtn.BackgroundColor3 = Color3.fromRGB(76, 175, 80)
+    wait(0.2)
+    rerollBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+end)
+
+infoBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Pet Randomizer Info",
+            Text = "Auto Stop pets: Raccoon, Dragonfly, Queen Bee, Red Fox, Disco Bee, Butterfly",
+            Duration = 5
+        })
+    end)
+end)
+
+eggDropdown.MouseButton1Click:Connect(function()
+    dropdownOpen = not dropdownOpen
+    dropdownList.Visible = dropdownOpen
+end)
+
+simulateBtn.MouseButton1Click:Connect(function()
+    if not selectedEgg then
+        resultLabel.Text = "Please select an egg first!"
+        return
+    end
+    
+    local pet = weightedRandom(eggChances[selectedEgg])
+    if pet then
+        resultLabel.Text = "🎉 " .. pet .. "!"
+        resultLabel.BackgroundColor3 = Color3.fromRGB(76, 175, 80)
+        
+        -- Check for auto-stop pets
+        local autoStopPets = {"Raccoon", "Dragon Fly", "Queen Bee", "Red Fox", "Disco Bee", "Butterfly"}
+        for _, stopPet in pairs(autoStopPets) do
+            if pet == stopPet and autoStopOn then
+                pcall(function()
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "🎊 RARE FIND!",
+                        Text = "You got " .. pet .. "! Auto-stop triggered!",
+                        Duration = 5
+                    })
+                end)
+                break
+            end
+        end
+    else
+        resultLabel.Text = "No pet found (0% chance)"
+        resultLabel.BackgroundColor3 = Color3.fromRGB(244, 67, 54)
+    end
+    
+    wait(2)
+    resultLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+end)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    guiVisible = not guiVisible
+    mainFrame.Visible = guiVisible
+    toggleBtn.Text = guiVisible and "−" or "+"
+end)
+
+-- Initialize
+populateEggList()
+
+-- ESP functionality (your original code)
+for _, egg in collectionService:GetTagged("PetEggServer") do
+    addESP(egg)
+end
+
+collectionService:GetInstanceAddedSignal("PetEggServer"):Connect(addESP)
+collectionService:GetInstanceRemovedSignal("PetEggServer"):Connect(removeESP)
+
+-- Keybind support
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.A then
+        autoStopOn = not autoStopOn
+        autoStopBtn.Text = autoStopOn and "Auto Stop: ON" or "Auto Stop: OFF"
+        autoStopBtn.BackgroundColor3 = autoStopOn and Color3.fromRGB(76, 175, 80) or Color3.fromRGB(244, 67, 54)
+    elseif input.KeyCode == Enum.KeyCode.B then
+        rerollBtn.MouseButton1Click:Fire()
+    elseif input.KeyCode == Enum.KeyCode.H then
+        toggleBtn.MouseButton1Click:Fire()
+    end
+end)
