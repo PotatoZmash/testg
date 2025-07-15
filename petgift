@@ -7,12 +7,12 @@ end
 
 local Rayfield = RayfieldLibrary()
 
-task.wait(1) -- Wait for GUI to load
+task.wait(1) -- wait for GUI
 
--- Create main window
+-- Main Window
 local Window = Rayfield:CreateWindow({
     Name = "Grow A Garden GUI",
-    LoadingTitle = "Loading Chat GUI...",
+    LoadingTitle = "Loading Player GUI...",
     LoadingSubtitle = "By blazeghast",
     ConfigurationSaving = {
         Enabled = false
@@ -26,55 +26,64 @@ local Window = Rayfield:CreateWindow({
 -- 💬 Chat Tab
 local ChatTab = Window:CreateTab("💬 Chat", 4483362458)
 
-local ChatMessage = ""
+-- Get all player names
+local Players = game:GetService("Players")
+local playerList = {}
 
-ChatTab:CreateInput({
-    Name = "Chat Message",
-    PlaceholderText = "Type your message here",
-    RemoveTextAfterFocusLost = false,
-    Callback = function(text)
-        ChatMessage = text
+for _, player in pairs(Players:GetPlayers()) do
+    table.insert(playerList, player.Name)
+end
+
+local selectedPlayer = nil
+
+-- Player Dropdown
+ChatTab:CreateDropdown({
+    Name = "Choose a Player",
+    Options = playerList,
+    CurrentOption = nil,
+    Callback = function(Option)
+        selectedPlayer = Option
     end
 })
 
+-- Send Button
 ChatTab:CreateButton({
     Name = "Send Chat",
     Callback = function()
-        if ChatMessage == "" then
+        if not selectedPlayer then
             Rayfield:Notify({
-                Title = "Error",
-                Content = "You must enter a message before sending!",
+                Title = "No Player Selected",
+                Content = "Please choose a player first.",
                 Duration = 3
             })
             return
         end
 
-        local Players = game:GetService("Players")
+        local message = "hi " .. selectedPlayer -- you can change format
+
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local TextChatService = game:GetService("TextChatService")
-        local Player = Players.LocalPlayer
-
         local ChatRemote = ReplicatedStorage:FindFirstChild("SayMessageRequest", true) or ReplicatedStorage:FindFirstChild("SayMessage", true)
 
         if ChatRemote then
-            ChatRemote:FireServer(ChatMessage, "All")
+            ChatRemote:FireServer(message, "All")
         elseif TextChatService and TextChatService:FindFirstChild("TextChannels") then
             local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
             if channel then
-                channel:SendAsync(ChatMessage)
+                channel:SendAsync(message)
             end
         else
-            -- Fallback: show text above player's head
+            local player = Players.LocalPlayer
             local billboard = Instance.new("BillboardGui")
             billboard.Size = UDim2.new(0, 200, 0, 50)
             billboard.StudsOffset = Vector3.new(0, 3, 0)
-            billboard.Adornee = Player.Character and Player.Character:FindFirstChild("Head")
-            billboard.Parent = Player.Character
+            billboard.Adornee = player.Character and player.Character:FindFirstChild("Head")
+            billboard.Parent = player.Character
 
             local label = Instance.new("TextLabel")
             label.Size = UDim2.new(1, 0, 1, 0)
             label.BackgroundTransparency = 1
-            label.Text = ChatMessage
+            label.Text = message
             label.TextColor3 = Color3.new(1, 1, 1)
             label.TextScaled = true
             label.Parent = billboard
