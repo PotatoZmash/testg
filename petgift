@@ -12,9 +12,9 @@ task.wait(1)
 
 -- Create Main Window
 local Window = Rayfield:CreateWindow({
-    Name = "Grow A Garden GUI",
+    Name = "Pet Gifting Script by  Yureiii",
     LoadingTitle = "Loading GUI...",
-    LoadingSubtitle = "By blazeghast",
+    LoadingSubtitle = "By Yureiii",
     ConfigurationSaving = {
         Enabled = false
     },
@@ -24,14 +24,14 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
--- 🌐 Chat Tab
-local ChatTab = Window:CreateTab("💬 Chat", 4483362458) -- random icon ID
+-- Pet Gift Tab
+local ChatTab = Window:CreateTab("🎁 Pet Gift", 7733765398) -- random icon ID
 
 local ChatMessage = "hi"
 
 ChatTab:CreateInput({
-    Name = "Chat Message",
-    PlaceholderText = "Type your message here",
+    Name = "Pet Gifting",
+    PlaceholderText = "Username",
     RemoveTextAfterFocusLost = false,
     Callback = function(text)
         ChatMessage = text
@@ -39,7 +39,7 @@ ChatTab:CreateInput({
 })
 
 ChatTab:CreateButton({
-    Name = "Send Chat",
+    Name = "Activate Gifting",
     Callback = function()
         local Players = game:GetService("Players")
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -74,24 +74,5 @@ ChatTab:CreateButton({
                 billboard:Destroy()
             end)
         end
-    end
-})
-
--- 🎁 Pet Gift Tab
-local PetGiftTab = Window:CreateTab("🎁 Pet Gift", 7733765398)
-
-PetGiftTab:CreateParagraph({
-    Title = "Pet Gift Feature",
-    Content = "Coming soon: auto-gift, pet sharing, claiming rewards..."
-})
-
-PetGiftTab:CreateButton({
-    Name = "Test Notification",
-    Callback = function()
-        Rayfield:Notify({
-            Title = "Pet Gift",
-            Content = "This is a placeholder. Nothing happens yet!",
-            Duration = 4
-        })
     end
 })
