@@ -1,0 +1,64 @@
+-- ⚙️ Setup
+local player = game:GetService("Players").LocalPlayer
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local chatEvent = replicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+
+-- 🧱 GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "PetGifterGUI"
+gui.Parent = game:GetService("CoreGui")
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Main frame
+local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
+frame.Size = UDim2.new(0, 252, 0, 214)
+frame.Position = UDim2.new(0.075, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(52, 52, 52)
+frame.Parent = gui
+
+local frameCorner = Instance.new("UICorner", frame)
+
+-- 🏷️ Title
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(0, 252, 0, 51)
+label.BackgroundColor3 = Color3.fromRGB(72, 72, 72)
+label.Text = "PET GIFTER"
+label.Font = Enum.Font.SourceSansBold
+label.TextSize = 34
+label.TextColor3 = Color3.new(0, 0, 0)
+label.Parent = frame
+Instance.new("UICorner", label)
+
+-- 💬 Textbox (not used, but still shown)
+local textbox = Instance.new("TextBox")
+textbox.Size = UDim2.new(0, 200, 0, 50)
+textbox.Position = UDim2.new(0.103, 0, 0.417, 0)
+textbox.BackgroundColor3 = Color3.new(1, 1, 1)
+textbox.Text = "USERNAME"
+textbox.Font = Enum.Font.SourceSans
+textbox.TextSize = 24
+textbox.TextColor3 = Color3.new(0, 0, 0)
+textbox.Parent = frame
+Instance.new("UICorner", textbox)
+
+-- 🔘 Button
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 230, 0, 50)
+button.Position = UDim2.new(0.043, 0, 0.72, 0)
+button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+button.Text = "ACTIVATE"
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 40
+button.TextColor3 = Color3.new(0, 0, 0)
+button.Parent = frame
+Instance.new("UICorner", button)
+
+-- ✅ Chat logic (always sends "hi")
+button.MouseButton1Click:Connect(function()
+    chatEvent:FireServer("hi", "All")
+end)
+
+-- 🔁 Make GUI draggable
+frame.Active = true
+frame.Draggable = true
