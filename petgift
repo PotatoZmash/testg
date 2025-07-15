@@ -1,92 +1,97 @@
--- Make sure Rayfield Library is loaded first
-loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+-- Load Rayfield Library
+local success, RayfieldLibrary = pcall(loadstring, game:HttpGet("https://sirius.menu/rayfield"))
+if not success then
+    warn("Rayfield Library failed to load!")
+    return
+end
 
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+local Rayfield = RayfieldLibrary()
 
--- Main Window
+-- Wait for GUI to fully initialize
+task.wait(1)
+
+-- Create Main Window
 local Window = Rayfield:CreateWindow({
-   Name = "Grow A Garden GUI",
-   LoadingTitle = "Grow A Garden GUI",
-   LoadingSubtitle = "By blazeghast",
-   ConfigurationSaving = {
-      Enabled = false
-   },
-   Discord = {
-      Enabled = false
-   },
-   KeySystem = false
+    Name = "Grow A Garden GUI",
+    LoadingTitle = "Loading GUI...",
+    LoadingSubtitle = "By blazeghast",
+    ConfigurationSaving = {
+        Enabled = false
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
 })
 
--- Chat Tab
-local ChatTab = Window:CreateTab("💬 Chat", {Icon = "rbxassetid://7734053492"})
+-- 🌐 Chat Tab
+local ChatTab = Window:CreateTab("💬 Chat", 4483362458) -- random icon ID
 
 local ChatMessage = "hi"
 
 ChatTab:CreateInput({
-   Name = "Chat Message",
-   PlaceholderText = "Type a message...",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-       ChatMessage = Text
-   end
+    Name = "Chat Message",
+    PlaceholderText = "Type your message here",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(text)
+        ChatMessage = text
+    end
 })
 
 ChatTab:CreateButton({
-   Name = "Send Chat Message",
-   Callback = function()
-       local Players = game:GetService("Players")
-       local ReplicatedStorage = game:GetService("ReplicatedStorage")
-       local TextChatService = game:GetService("TextChatService")
-       local Player = Players.LocalPlayer
+    Name = "Send Chat",
+    Callback = function()
+        local Players = game:GetService("Players")
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local TextChatService = game:GetService("TextChatService")
+        local Player = Players.LocalPlayer
 
-       local ChatRemote = ReplicatedStorage:FindFirstChild("SayMessageRequest", true) or ReplicatedStorage:FindFirstChild("SayMessage", true)
+        local ChatRemote = ReplicatedStorage:FindFirstChild("SayMessageRequest", true) or ReplicatedStorage:FindFirstChild("SayMessage", true)
 
-       if ChatRemote then
-           ChatRemote:FireServer(ChatMessage, "All")
-       elseif TextChatService and TextChatService:FindFirstChild("TextChannels") then
-           local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
-           if channel then
-               channel:SendAsync(ChatMessage)
-           end
-       else
-           -- Fallback: Floating text above head
-           local billboard = Instance.new("BillboardGui")
-           billboard.Size = UDim2.new(0, 200, 0, 50)
-           billboard.StudsOffset = Vector3.new(0, 3, 0)
-           billboard.Adornee = Player.Character and Player.Character:FindFirstChild("Head")
-           billboard.Parent = Player.Character
+        if ChatRemote then
+            ChatRemote:FireServer(ChatMessage, "All")
+        elseif TextChatService and TextChatService:FindFirstChild("TextChannels") then
+            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then
+                channel:SendAsync(ChatMessage)
+            end
+        else
+            local billboard = Instance.new("BillboardGui")
+            billboard.Size = UDim2.new(0, 200, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 3, 0)
+            billboard.Adornee = Player.Character and Player.Character:FindFirstChild("Head")
+            billboard.Parent = Player.Character
 
-           local label = Instance.new("TextLabel")
-           label.Size = UDim2.new(1, 0, 1, 0)
-           label.BackgroundTransparency = 1
-           label.Text = ChatMessage
-           label.TextColor3 = Color3.new(1, 1, 1)
-           label.TextScaled = true
-           label.Parent = billboard
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = ChatMessage
+            label.TextColor3 = Color3.new(1, 1, 1)
+            label.TextScaled = true
+            label.Parent = billboard
 
-           task.delay(3, function()
-               billboard:Destroy()
-           end)
-       end
-   end
+            task.delay(3, function()
+                billboard:Destroy()
+            end)
+        end
+    end
 })
 
--- Pet Gift Tab
-local PetGiftTab = Window:CreateTab("🎁 Pet Gift", {Icon = "rbxassetid://7733765398"})
+-- 🎁 Pet Gift Tab
+local PetGiftTab = Window:CreateTab("🎁 Pet Gift", 7733765398)
 
 PetGiftTab:CreateParagraph({
-   Title = "Pet Gift Info",
-   Content = "You can add pet gifting features here (like auto-give, claim gifts, etc.)"
+    Title = "Pet Gift Feature",
+    Content = "Coming soon: auto-gift, pet sharing, claiming rewards..."
 })
 
 PetGiftTab:CreateButton({
-   Name = "Placeholder Button",
-   Callback = function()
-       Rayfield:Notify({
-           Title = "Pet Gift",
-           Content = "This button does nothing... yet!",
-           Duration = 4,
-           Image = nil
-       })
-   end
+    Name = "Test Notification",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "Pet Gift",
+            Content = "This is a placeholder. Nothing happens yet!",
+            Duration = 4
+        })
+    end
 })
