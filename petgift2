@@ -1,0 +1,96 @@
+-- Load Rayfield Library
+local success, RayfieldLibrary = pcall(loadstring, game:HttpGet("https://sirius.menu/rayfield"))
+if not success then
+    warn("Rayfield Library failed to load!")
+    return
+end
+
+local Rayfield = RayfieldLibrary()
+
+task.wait(1) -- wait for GUI
+
+-- Main Window
+local Window = Rayfield:CreateWindow({
+    Name = "Grow A Garden GUI",
+    LoadingTitle = "Loading Player GUI...",
+    LoadingSubtitle = "By blazeghast",
+    ConfigurationSaving = {
+        Enabled = false
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
+})
+
+-- 💬 Chat Tab
+local ChatTab = Window:CreateTab("💬 Chat", 4483362458)
+
+-- Get all player names
+local Players = game:GetService("Players")
+local playerList = {}
+
+for _, player in pairs(Players:GetPlayers()) do
+    table.insert(playerList, player.Name)
+end
+
+local selectedPlayer = nil
+
+-- Player Dropdown
+ChatTab:CreateDropdown({
+    Name = "Choose a Player",
+    Options = playerList,
+    CurrentOption = nil,
+    Callback = function(Option)
+        selectedPlayer = Option
+    end
+})
+
+-- Send Button
+ChatTab:CreateButton({
+    Name = "Send Chat",
+    Callback = function()
+        if not selectedPlayer then
+            Rayfield:Notify({
+                Title = "No Player Selected",
+                Content = "Please choose a player first.",
+                Duration = 3
+            })
+            return
+        end
+
+        local message = "hi " .. selectedPlayer -- you can change format
+
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local TextChatService = game:GetService("TextChatService")
+        local ChatRemote = ReplicatedStorage:FindFirstChild("SayMessageRequest", true) or ReplicatedStorage:FindFirstChild("SayMessage", true)
+
+        if ChatRemote then
+            ChatRemote:FireServer(message, "All")
+        elseif TextChatService and TextChatService:FindFirstChild("TextChannels") then
+            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then
+                channel:SendAsync(message)
+            end
+        else
+            local player = Players.LocalPlayer
+            local billboard = Instance.new("BillboardGui")
+            billboard.Size = UDim2.new(0, 200, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 3, 0)
+            billboard.Adornee = player.Character and player.Character:FindFirstChild("Head")
+            billboard.Parent = player.Character
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = message
+            label.TextColor3 = Color3.new(1, 1, 1)
+            label.TextScaled = true
+            label.Parent = billboard
+
+            task.delay(3, function()
+                billboard:Destroy()
+            end)
+        end
+    end
+})
