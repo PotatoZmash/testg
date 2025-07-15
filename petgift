@@ -3,10 +3,11 @@ loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
+-- Main Window
 local Window = Rayfield:CreateWindow({
-   Name = "Chat Sender",
-   LoadingTitle = "Chat GUI",
-   LoadingSubtitle = "by blazeghast",
+   Name = "Grow A Garden GUI",
+   LoadingTitle = "Grow A Garden GUI",
+   LoadingSubtitle = "By blazeghast",
    ConfigurationSaving = {
       Enabled = false
    },
@@ -16,18 +17,21 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
-local ChatMessage = "hi" -- default message
+-- Chat Tab
+local ChatTab = Window:CreateTab("💬 Chat", {Icon = "rbxassetid://7734053492"})
 
-Rayfield:CreateInput({
+local ChatMessage = "hi"
+
+ChatTab:CreateInput({
    Name = "Chat Message",
-   PlaceholderText = "Type message to chat...",
+   PlaceholderText = "Type a message...",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
        ChatMessage = Text
    end
 })
 
-Rayfield:CreateButton({
+ChatTab:CreateButton({
    Name = "Send Chat Message",
    Callback = function()
        local Players = game:GetService("Players")
@@ -45,7 +49,7 @@ Rayfield:CreateButton({
                channel:SendAsync(ChatMessage)
            end
        else
-           -- Fallback text above head
+           -- Fallback: Floating text above head
            local billboard = Instance.new("BillboardGui")
            billboard.Size = UDim2.new(0, 200, 0, 50)
            billboard.StudsOffset = Vector3.new(0, 3, 0)
@@ -64,5 +68,25 @@ Rayfield:CreateButton({
                billboard:Destroy()
            end)
        end
+   end
+})
+
+-- Pet Gift Tab
+local PetGiftTab = Window:CreateTab("🎁 Pet Gift", {Icon = "rbxassetid://7733765398"})
+
+PetGiftTab:CreateParagraph({
+   Title = "Pet Gift Info",
+   Content = "You can add pet gifting features here (like auto-give, claim gifts, etc.)"
+})
+
+PetGiftTab:CreateButton({
+   Name = "Placeholder Button",
+   Callback = function()
+       Rayfield:Notify({
+           Title = "Pet Gift",
+           Content = "This button does nothing... yet!",
+           Duration = 4,
+           Image = nil
+       })
    end
 })
