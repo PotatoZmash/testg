@@ -119,7 +119,7 @@ for _, egg in pairs(CollectionService:GetTagged("PetEggServer")) do
     end
 
     cooldown = true
-    local countdown = 8
+    local countdown = 2
     btn.Text = "Cooldown: " .. countdown .. "s"
     task.spawn(function()
         while countdown > 0 do
