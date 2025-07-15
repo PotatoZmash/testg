@@ -1,64 +1,79 @@
--- ⚙️ Setup
-local player = game:GetService("Players").LocalPlayer
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local chatEvent = replicatedStorage:WaitForChild("DefaultChatSystemChatEvents"):WaitForChild("SayMessageRequest")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
 
--- 🧱 GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "PetGifterGUI"
-gui.Parent = game:GetService("CoreGui")
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- Clear old GUI if exists
+if CoreGui:FindFirstChild("MyCustomGui") then
+    CoreGui.MyCustomGui:Destroy()
+end
 
--- Main frame
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MyCustomGui"
+screenGui.Parent = CoreGui
+
+-- Main Frame
 local frame = Instance.new("Frame")
-frame.Name = "MainFrame"
-frame.Size = UDim2.new(0, 252, 0, 214)
-frame.Position = UDim2.new(0.075, 0, 0.3, 0)
-frame.BackgroundColor3 = Color3.fromRGB(52, 52, 52)
-frame.Parent = gui
+frame.Size = UDim2.new(0, 300, 0, 200)
+frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Parent = screenGui
 
-local frameCorner = Instance.new("UICorner", frame)
+local uicorner = Instance.new("UICorner")
+uicorner.CornerRadius = UDim.new(0, 12)
+uicorner.Parent = frame
 
--- 🏷️ Title
+-- Top Label
 local label = Instance.new("TextLabel")
-label.Size = UDim2.new(0, 252, 0, 51)
-label.BackgroundColor3 = Color3.fromRGB(72, 72, 72)
-label.Text = "PET GIFTER"
+label.Size = UDim2.new(1, 0, 0, 40)
+label.Text = "Say Something"
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.new(1, 1, 1)
 label.Font = Enum.Font.SourceSansBold
-label.TextSize = 34
-label.TextColor3 = Color3.new(0, 0, 0)
+label.TextSize = 24
 label.Parent = frame
-Instance.new("UICorner", label)
 
--- 💬 Textbox (not used, but still shown)
+-- Middle TextBox
 local textbox = Instance.new("TextBox")
-textbox.Size = UDim2.new(0, 200, 0, 50)
-textbox.Position = UDim2.new(0.103, 0, 0.417, 0)
-textbox.BackgroundColor3 = Color3.new(1, 1, 1)
-textbox.Text = "USERNAME"
-textbox.Font = Enum.Font.SourceSans
-textbox.TextSize = 24
+textbox.Size = UDim2.new(0.9, 0, 0, 40)
+textbox.Position = UDim2.new(0.05, 0, 0.5, -20)
+textbox.PlaceholderText = "Type here..."
+textbox.Text = ""
+textbox.TextSize = 18
 textbox.TextColor3 = Color3.new(0, 0, 0)
+textbox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+textbox.ClearTextOnFocus = false
+textbox.Font = Enum.Font.SourceSans
 textbox.Parent = frame
-Instance.new("UICorner", textbox)
 
--- 🔘 Button
+local textboxCorner = Instance.new("UICorner")
+textboxCorner.CornerRadius = UDim.new(0, 8)
+textboxCorner.Parent = textbox
+
+-- Bottom Button
 local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 230, 0, 50)
-button.Position = UDim2.new(0.043, 0, 0.72, 0)
-button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-button.Text = "ACTIVATE"
+button.Size = UDim2.new(0.6, 0, 0, 40)
+button.Position = UDim2.new(0.2, 0, 1, -50)
+button.Text = "Say Hi"
+button.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
+button.TextColor3 = Color3.new(1, 1, 1)
 button.Font = Enum.Font.SourceSansBold
-button.TextSize = 40
-button.TextColor3 = Color3.new(0, 0, 0)
+button.TextSize = 20
 button.Parent = frame
-Instance.new("UICorner", button)
 
--- ✅ Chat logic (always sends "hi")
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = button
+
+-- Function to send "hi" to chat
 button.MouseButton1Click:Connect(function()
-    chatEvent:FireServer("hi", "All")
+    local sayMessageRequest = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+    
+    if sayMessageRequest then
+        sayMessageRequest:FireServer("hi", "All")
+    else
+        warn("SayMessageRequest not found.")
+    end
 end)
-
--- 🔁 Make GUI draggable
-frame.Active = true
-frame.Draggable = true
