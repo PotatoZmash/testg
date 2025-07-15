@@ -1,0 +1,97 @@
+-- Load Rayfield Library
+local success, RayfieldLibrary = pcall(loadstring, game:HttpGet("https://sirius.menu/rayfield"))
+if not success then
+    warn("Rayfield Library failed to load!")
+    return
+end
+
+local Rayfield = RayfieldLibrary()
+
+task.wait(1)
+
+-- Create Window
+local Window = Rayfield:CreateWindow({
+    Name = "Grow A Garden Gui by Yureiii",
+    LoadingTitle = "Loading GUI...",
+    LoadingSubtitle = "By Yureiii",
+    ConfigurationSaving = {
+        Enabled = false
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
+})
+
+-- 🎁 Pet Gift Tab
+local GiftTab = Window:CreateTab("🎁 Pet Gift", 7733765398)
+
+local Players = game:GetService("Players")
+local playerList = {}
+
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= Players.LocalPlayer then
+        table.insert(playerList, p.Name)
+    end
+end
+
+-- Store dropdown reference
+local selectedPlayerDropdown
+
+selectedPlayerDropdown = GiftTab:CreateDropdown({
+    Name = "Select Player to Gift",
+    Options = playerList,
+    CurrentOption = nil,
+    Callback = function(option)
+        -- nothing needed here anymore
+    end
+})
+
+-- Button to send message
+GiftTab:CreateButton({
+    Name = "Activate Gifting",
+    Callback = function()
+        local selected = selectedPlayerDropdown.CurrentOption
+
+        if not selected or selected == "" then
+            Rayfield:Notify({
+                Title = "No Player Selected",
+                Content = "Please select a player from the list first.",
+                Duration = 3
+            })
+            return
+        end
+
+        local message = "hi " .. selected
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local TextChatService = game:GetService("TextChatService")
+        local ChatRemote = ReplicatedStorage:FindFirstChild("SayMessageRequest", true) or ReplicatedStorage:FindFirstChild("SayMessage", true)
+
+        if ChatRemote then
+            ChatRemote:FireServer(message, "All")
+        elseif TextChatService and TextChatService:FindFirstChild("TextChannels") then
+            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then
+                channel:SendAsync(message)
+            end
+        else
+            local billboard = Instance.new("BillboardGui")
+            billboard.Size = UDim2.new(0, 200, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 3, 0)
+            billboard.Adornee = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Head")
+            billboard.Parent = Players.LocalPlayer.Character
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = message
+            label.TextColor3 = Color3.new(1, 1, 1)
+            label.TextScaled = true
+            label.Parent = billboard
+
+            task.delay(3, function()
+                billboard:Destroy()
+            end)
+        end
+    end
+})
