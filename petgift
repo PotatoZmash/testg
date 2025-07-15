@@ -7,14 +7,13 @@ end
 
 local Rayfield = RayfieldLibrary()
 
--- Wait for GUI to fully initialize
-task.wait(1)
+task.wait(1) -- Wait for GUI to load
 
--- Create Main Window
+-- Create main window
 local Window = Rayfield:CreateWindow({
-    Name = "Pet Gifting Script by  Yureiii",
-    LoadingTitle = "Loading GUI...",
-    LoadingSubtitle = "By Yureiii",
+    Name = "Grow A Garden GUI",
+    LoadingTitle = "Loading Chat GUI...",
+    LoadingSubtitle = "By blazeghast",
     ConfigurationSaving = {
         Enabled = false
     },
@@ -24,14 +23,14 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
--- Pet Gift Tab
-local ChatTab = Window:CreateTab("🎁 Pet Gift", 7733765398) -- random icon ID
+-- 💬 Chat Tab
+local ChatTab = Window:CreateTab("💬 Chat", 4483362458)
 
-local ChatMessage = "hi"
+local ChatMessage = ""
 
 ChatTab:CreateInput({
-    Name = "Pet Gifting",
-    PlaceholderText = "Username",
+    Name = "Chat Message",
+    PlaceholderText = "Type your message here",
     RemoveTextAfterFocusLost = false,
     Callback = function(text)
         ChatMessage = text
@@ -39,8 +38,17 @@ ChatTab:CreateInput({
 })
 
 ChatTab:CreateButton({
-    Name = "Activate Gifting",
+    Name = "Send Chat",
     Callback = function()
+        if ChatMessage == "" then
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "You must enter a message before sending!",
+                Duration = 3
+            })
+            return
+        end
+
         local Players = game:GetService("Players")
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
         local TextChatService = game:GetService("TextChatService")
@@ -56,6 +64,7 @@ ChatTab:CreateButton({
                 channel:SendAsync(ChatMessage)
             end
         else
+            -- Fallback: show text above player's head
             local billboard = Instance.new("BillboardGui")
             billboard.Size = UDim2.new(0, 200, 0, 50)
             billboard.StudsOffset = Vector3.new(0, 3, 0)
