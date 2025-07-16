@@ -191,16 +191,66 @@ EggTab:CreateButton({
         -- Cooldown + countdown
         cooldown = true
         local timeLeft = 2
-        local buttonRef = EggTab.Sections[1].Items[2].Instance
-        buttonRef.Text = "Cooldown: " .. timeLeft .. "s"
+        -- Store the button object to update text later
+local randomizerButton
+
+-- Button that randomizes pet and shows result above egg
+randomizerButton = EggTab:CreateButton({
+    Name = "Randomizer",
+    Callback = function()
+        if cooldown then return end
+
+        local eggName = inputText
+
+        if not eggChances[eggName] then
+            Rayfield:Notify({
+                Title = "Egg Error",
+                Content = "Invalid egg name!",
+                Duration = 3
+            })
+            return
+        end
+
+        for _, egg in pairs(CollectionService:GetTagged("PetEggServer")) do
+            if egg:GetAttribute("EggName") == eggName and egg:GetAttribute("OWNER") == lp.Name then
+                local pet = randomPet(eggName)
+
+                -- Remove old label if exists
+                local old = egg:FindFirstChild("FakePetESP")
+                if old then old:Destroy() end
+
+                -- Create label above egg
+                local gui = Instance.new("BillboardGui", egg)
+                gui.Name = "FakePetESP"
+                gui.Adornee = egg:FindFirstChildWhichIsA("BasePart") or egg.PrimaryPart or egg
+                gui.Size = UDim2.new(0, 200, 0, 50)
+                gui.StudsOffset = Vector3.new(0, 2.5, 0)
+                gui.AlwaysOnTop = true
+
+                local lbl = Instance.new("TextLabel", gui)
+                lbl.Size = UDim2.new(1, 0, 1, 0)
+                lbl.BackgroundTransparency = 1
+                lbl.Text = eggName .. " | " .. pet
+                lbl.TextColor3 = Color3.new(1, 1, 1)
+                lbl.TextStrokeTransparency = 0
+                lbl.TextSize = 18
+                lbl.Font = Enum.Font.GothamBold
+            end
+        end
+
+        -- 🕒 Cooldown logic
+        cooldown = true
+        local timeLeft = 2
+        randomizerButton:Set("Name", "Cooldown: " .. timeLeft .. "s")
+
         task.spawn(function()
             while timeLeft > 0 do
                 task.wait(1)
                 timeLeft -= 1
-                buttonRef.Text = "Cooldown: " .. timeLeft .. "s"
+                randomizerButton:Set("Name", "Cooldown: " .. timeLeft .. "s")
             end
             cooldown = false
-            buttonRef.Text = "Randomizer"
+            randomizerButton:Set("Name", "Randomizer")
         end)
     end
 })
