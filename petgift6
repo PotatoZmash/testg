@@ -137,7 +137,7 @@ EggTab:CreateInput({
 
 randomizerButton = EggTab:CreateButton({
     Name = "Randomizer",
-    Callback = function()
+        Callback = function()
         if cooldown then return end
         local eggName = inputText
 
@@ -150,31 +150,47 @@ randomizerButton = EggTab:CreateButton({
             return
         end
 
+        local foundAny = false
         for _, egg in pairs(CollectionService:GetTagged("PetEggServer")) do
             if egg:GetAttribute("EggName") == eggName and egg:GetAttribute("OWNER") == lp.Name then
+                foundAny = true
                 local pet = randomPet(eggName)
+
+                -- Clear old ESP if any
                 local old = egg:FindFirstChild("FakePetESP")
                 if old then old:Destroy() end
 
-                local gui = Instance.new("BillboardGui", egg)
+                -- Create new Billboard GUI
+                local gui = Instance.new("BillboardGui")
                 gui.Name = "FakePetESP"
                 gui.Adornee = egg:FindFirstChildWhichIsA("BasePart") or egg.PrimaryPart or egg
-                gui.Size = UDim2.new(0, 200, 0, 50)
-                gui.StudsOffset = Vector3.new(0, 2.5, 0)
+                gui.Size = UDim2.new(0, 300, 0, 80)
+                gui.StudsOffset = Vector3.new(0, 3.5, 0)
                 gui.AlwaysOnTop = true
+                gui.Parent = egg
 
                 local lbl = Instance.new("TextLabel", gui)
                 lbl.Size = UDim2.new(1, 0, 1, 0)
                 lbl.BackgroundTransparency = 1
                 lbl.Text = eggName .. " | " .. pet
                 lbl.TextColor3 = getPetColor(eggName, pet)
-                lbl.TextStrokeTransparency = 0
-                lbl.TextSize = 18
+                lbl.TextStrokeTransparency = 0 -- enables stroke
+                lbl.TextStrokeColor3 = Color3.new(1, 1, 1) -- white stroke
+                lbl.TextScaled = true
                 lbl.Font = Enum.Font.GothamBold
             end
         end
 
-        -- Cooldown
+        if not foundAny then
+            Rayfield:Notify({
+                Title = "No Eggs Found",
+                Content = "You don't own any '" .. eggName .. "' eggs.",
+                Duration = 3
+            })
+            return
+        end
+
+        -- Cooldown logic
         cooldown = true
         local timeLeft = 2
         randomizerButton:Set("Name", "Cooldown: " .. timeLeft .. "s")
@@ -188,4 +204,3 @@ randomizerButton = EggTab:CreateButton({
             randomizerButton:Set("Name", "Randomizer")
         end)
     end
-})
