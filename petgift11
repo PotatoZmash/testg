@@ -223,10 +223,11 @@ Conclusion: It randomizes the pet you're going to get in the egg.
 ]]
 })
 
--- 🌀 Dupe Tab
+-- 🌀 Dupe Tab (Equipped Item Only)
 local DupeTab = Window:CreateTab("🌀 Dupe", 7733961366)
 local multiplier = 2
 
+-- Function: Dupe Equipped Tool (not seeds)
 local function DupeEquippedItem()
     local character = Players.LocalPlayer.Character
     if character then
@@ -246,27 +247,7 @@ local function DupeEquippedItem()
     end
 end
 
-local function DupeSeeds()
-    local backpack = Players.LocalPlayer.Backpack
-    local duped = false
-    for _, item in pairs(backpack:GetChildren()) do
-        if item.Name:match("Seed") and item.Name:match("x%d+") then
-            local num = tonumber(item.Name:match("x(%d+)"))
-            if num then
-                item.Name = item.Name:gsub("x%d+", "x" .. tostring(num * multiplier))
-                duped = true
-            end
-        end
-    end
-    if not duped then
-        Rayfield:Notify({
-            Title = "No Seeds Found",
-            Content = "Make sure you have seeds like 'Carrot Seed x10' in backpack.",
-            Duration = 3
-        })
-    end
-end
-
+-- Multiplier Slider
 DupeTab:CreateSlider({
     Name = "Multiplier",
     Range = {2, 100},
@@ -278,21 +259,18 @@ DupeTab:CreateSlider({
     end
 })
 
+-- Dupe Equipped Button
 DupeTab:CreateButton({
     Name = "Dupe Equipped Item",
     Callback = DupeEquippedItem
 })
 
-DupeTab:CreateButton({
-    Name = "Dupe Seeds",
-    Callback = DupeSeeds
-})
-
+-- Info Paragraph
 DupeTab:CreateParagraph({
     Title = "How does it work?",
     Content = [[
-1. Equip a tool (not a seed) and click 'Dupe Equipped Item'.
-2. Make sure seed name includes amount (e.g., x10), then click 'Dupe Seeds'.
-3. Adjust multiplier with the slider.
+1. Equip a tool (like watering can or axe).
+2. Click 'Dupe Equipped Item' to create multiple copies in your backpack.
+3. Adjust the multiplier to control how many copies you get.
 ]]
 })
