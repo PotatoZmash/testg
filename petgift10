@@ -68,7 +68,6 @@ GiftTab:CreateButton({
     end
 })
 
--- 📘 Pet Gift Tab Info
 GiftTab:CreateParagraph({
     Title = "How does it work?",
     Content = [[
@@ -104,13 +103,13 @@ local function getPetColor(eggName, petName)
     local chance = eggChances[eggName] and eggChances[eggName][petName]
     if not chance then return Color3.new(1, 1, 1) end
     if chance >= 30 then
-        return Color3.fromRGB(85, 255, 85) -- Green
+        return Color3.fromRGB(85, 255, 85)
     elseif chance >= 10 then
-        return Color3.fromRGB(255, 255, 100) -- Yellow
+        return Color3.fromRGB(255, 255, 100)
     elseif chance >= 1 then
-        return Color3.fromRGB(255, 170, 0) -- Orange
+        return Color3.fromRGB(255, 170, 0)
     else
-        return Color3.fromRGB(255, 80, 80) -- Red
+        return Color3.fromRGB(255, 80, 80)
     end
 end
 
@@ -214,7 +213,6 @@ randomizerButton = EggTab:CreateButton({
     end
 })
 
--- 📘 Egg Randomizer Tab Info
 EggTab:CreateParagraph({
     Title = "How does it work?",
     Content = [[
@@ -222,5 +220,57 @@ EggTab:CreateParagraph({
 2. Click Randomize to randomize the pet you want to get.
 
 Conclusion: It randomizes the pet you're going to get in the egg.
+]]
+})
+
+-- 🌀 Dupe Tab (Equipped Item Only)
+local DupeTab = Window:CreateTab("🌀 Dupe", 7733961366)
+local multiplier = 2
+
+-- Function: Dupe Equipped Tool (not seeds)
+local function DupeEquippedItem()
+    local character = Players.LocalPlayer.Character
+    if character then
+        local tool = character:FindFirstChildOfClass("Tool")
+        if tool and not tool.Name:match("Seed") then
+            for i = 1, multiplier do
+                local clone = tool:Clone()
+                clone.Parent = Players.LocalPlayer.Backpack
+            end
+        else
+            Rayfield:Notify({
+                Title = "No Valid Tool",
+                Content = "Equip a tool (not a seed) to dupe.",
+                Duration = 3
+            })
+        end
+    end
+end
+
+-- Multiplier Slider
+DupeTab:CreateSlider({
+    Name = "Multiplier",
+    Range = {2, 100},
+    Increment = 1,
+    CurrentValue = 2,
+    Suffix = "x",
+    Callback = function(v)
+        multiplier = v
+    end
+})
+
+-- Dupe Equipped Button
+DupeTab:CreateButton({
+    Name = "Dupe Equipped Item",
+    Callback = DupeEquippedItem
+})
+
+-- Info Paragraph
+DupeTab:CreateParagraph({
+    Title = "How does it work?",
+    Content = [[
+1. Equip a tool (like watering can or axe).
+2. Click 'Dupe Equipped Item' to create multiple copies in your backpack.
+3. Adjust the multiplier to control how many copies you get.
 ]]
 })
