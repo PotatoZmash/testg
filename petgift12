@@ -276,7 +276,7 @@ local MutationTab = Window:CreateTab("🔬 Pet Mutation Finder", 7734018437)
 
 local mutations = {
     "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
-    "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended"
+    "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended", "Tranquil"
 }
 local currentMutation = mutations[math.random(#mutations)]
 local espVisible = true
