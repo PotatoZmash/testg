@@ -392,3 +392,36 @@ MutationTab:CreateParagraph({
     Title = "Credit",
     Content = "Made by KentNeedprofits"
 })
+
+-- 🍳 Cooking Event Tab
+local CookingTab = Window:CreateTab("🍳 Cooking Event", 7734018437)
+
+CookingTab:CreateParagraph({
+    Title = "Cooking Event Helper",
+    Content = [[
+Click the button below to collect food from the Cooking Pot event.
+]]
+})
+
+CookingTab:CreateButton({
+    Name = "🍲 Collect Food From Pot",
+    Callback = function()
+        local success, err = pcall(function()
+            game:GetService("ReplicatedStorage").GameEvents.CookingPotService_RE:FireServer("GetFoodFromPot")
+        end)
+        
+        if success then
+            Rayfield:Notify({
+                Title = "Success",
+                Content = "Successfully requested food from pot!",
+                Duration = 2
+            })
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Failed to call remote: " .. tostring(err),
+                Duration = 3
+            })
+        end
+    end
+})
