@@ -1,0 +1,427 @@
+-- Load Rayfield Library
+local success, RayfieldLibrary = pcall(loadstring, game:HttpGet("https://sirius.menu/rayfield"))
+if not success then
+    warn("Rayfield Library failed to load!")
+    return
+end
+
+local Rayfield = RayfieldLibrary()
+task.wait(1)
+
+local Window = Rayfield:CreateWindow({
+    Name = "Grow A Garden Gui by Yureiii",
+    LoadingTitle = "Loading GUI...",
+    LoadingSubtitle = "By Yureiii",
+    ConfigurationSaving = { Enabled = false },
+    Discord = { Enabled = false },
+    KeySystem = false
+})
+
+-- 🎁 Pet Gift Tab
+local GiftTab = Window:CreateTab("🎁 Pet Gift", 7733765398)
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+
+local playerList = {}
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= Players.LocalPlayer then
+        table.insert(playerList, p.Name)
+    end
+end
+
+local selectedPlayer = nil
+
+GiftTab:CreateDropdown({
+    Name = "Select Player",
+    Options = playerList,
+    CurrentOption = nil,
+    Callback = function(player)
+        selectedPlayer = player
+    end
+})
+
+GiftTab:CreateButton({
+    Name = "Activate Gifting",
+    Callback = function()
+        if not selectedPlayer then
+            Rayfield:Notify({
+                Title = "No Player Selected",
+                Content = "Please choose a player first.",
+                Duration = 3
+            })
+            return
+        end
+
+        local message = "hi"
+        local ChatRemote = ReplicatedStorage:FindFirstChild("SayMessageRequest", true)
+            or ReplicatedStorage:FindFirstChild("SayMessage", true)
+
+        if ChatRemote then
+            ChatRemote:FireServer(message, "All")
+        elseif TextChatService and TextChatService:FindFirstChild("TextChannels") then
+            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then
+                channel:SendAsync(message)
+            end
+        end
+    end
+})
+
+GiftTab:CreateParagraph({
+    Title = "How does it work?",
+    Content = [[
+1. Select Player or Victim you want to steal pets.
+2. Click the button to activate stealing.
+]]
+})
+
+-- 🥚 Egg Randomizer Tab
+local EggTab = Window:CreateTab("🥚 Egg Randomizer", 7733960982)
+local CollectionService = game:GetService("CollectionService")
+local lp = Players.LocalPlayer
+
+local eggChances = {
+    ["Common Egg"]        = { ["Golden Lab"] = 33.33, ["Dog"] = 33.33, ["Bunny"] = 33.33 },
+    ["Common Summer Egg"] = { ["Starfish"] = 50, ["Seagull"] = 25, ["Crab"] = 25 },
+    ["Rare Summer Egg"]   = { ["Flamingo"] = 30, ["Toucan"] = 25, ["Sea Turtle"] = 20, ["Orangutan"] = 15, ["Seal"] = 10 },
+    ["Paradise Egg"]      = { ["Ostrich"] = 40, ["Peacock"] = 30, ["Capybara"] = 21, ["Scarlet Macaw"] = 8, ["Mimic Octopus"] = 1 },
+    ["Mythical Egg"]      = { ["Grey Mouse"] = 35.71, ["Brown Mouse"] = 26.79, ["Squirrel"] = 26.79, ["Red Giant Ant"] = 8.93, ["Red Fox"] = 1.79 },
+    ["Bee Egg"]           = { ["Bee"] = 65, ["Honey Bee"] = 25, ["Bear Bee"] = 5, ["Petal Bee"] = 4, ["Queen Bee"] = 1 },
+    ["Bug Egg"]           = { ["Snail"] = 40, ["Giant Ant"] = 30, ["Caterpillar"] = 25, ["Praying Mantis"] = 4, ["Dragonfly"] = 1 },
+    ["Anti Bee Egg"]      = { ["Wasp"] = 55, ["Tarantula Hawk"] = 30, ["Moth"] = 13.75, ["Butterfly"] = 1, ["Disco Bee"] = 0.25 },
+    ["Oasis Egg"]         = { ["Meerkat"] = 45, ["Sand Snake"] = 34.5, ["Axolotl"] = 15, ["Hyacinth Macaw"] = 5, ["Fennec Fox"] = 0.5 },
+    ["Dinosaur Egg"]      = { ["Triceratops"] = 32.5, ["Raptor"] = 35, ["Stegosaurus"] = 28, ["Pterodactyl"] = 3, ["Brontosaurus"] = 1, ["T-Rex"] = 0.5 },
+    ["Uncommon Egg"]      = { ["Black Bunny"] = 25, ["Chicken"] = 25, ["Cat"] = 25, ["Deer"] = 25 },
+    ["Rare Egg"]          = { ["Orange Tabby"] = 33.33, ["Spotted Deer"] = 25, ["Pig"] = 16.67, ["Rooster"] = 16.67, ["Monkey"] = 8.33 },
+    ["Legendary Egg"]     = { ["Cow"] = 42.55, ["Silver Monkey"] = 42.55, ["Sea Otter"] = 10.64, ["Turtle"] = 2.13, ["Polar Bear"] = 2.13 },
+    ["Night Egg"]         = { ["Hedgehog"] = 49, ["Mole"] = 22, ["Frog"] = 14, ["Echo Frog"] = 10, ["Night Owl"] = 4, ["Raccoon"] = 1 },
+    ["Primal Egg"]        = { ["Parasaurolophus"] = 35, ["Iguanodon"] = 32.5, ["Pachycephalosaurus"] = 28, ["Dilophosaurus"] = 3, ["Ankylosaurus"] = 1, ["Spinosaurus"] = 0.5 },
+    ["Zen Egg"]           = { ["Shiba Inu"] = 40, ["Nihonzaru"] = 32, ["Tanuki"] = 20, ["Tanchozuru"] = 4.4, ["Kappa"] = 3.5, ["Kitsune"] = 0.08 }
+}
+
+local function randomPet(eggType)
+    local pets = eggChances[eggType]
+    if not pets then return nil end
+    local total, roll = 0, 0
+    for _, chance in pairs(pets) do total += chance end
+    roll = math.random() * total
+    local cumulative = 0
+    for pet, chance in pairs(pets) do
+        cumulative += chance
+        if roll <= cumulative then return pet end
+    end
+end
+
+local inputText = ""
+local cooldown = false
+local randomizerButton
+
+EggTab:CreateInput({
+    Name = "Egg Name (e.g. Mythical Egg)",
+    PlaceholderText = "Type egg name here...",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(text)
+        inputText = text
+    end
+})
+
+randomizerButton = EggTab:CreateButton({
+    Name = "Randomizer",
+    Callback = function()
+        if cooldown then
+            Rayfield:Notify({
+                Title = "Cooldown Active",
+                Content = "Please wait 2 seconds before clicking again.",
+                Duration = 2
+            })
+            return
+        end
+
+        local eggName = inputText
+        if not eggChances[eggName] then
+            Rayfield:Notify({
+                Title = "Egg Error",
+                Content = "Invalid egg name!",
+                Duration = 3
+            })
+            return
+        end
+
+        local foundAny = false
+        for _, egg in pairs(CollectionService:GetTagged("PetEggServer")) do
+            if egg:GetAttribute("EggName") == eggName and egg:GetAttribute("OWNER") == lp.Name then
+                foundAny = true
+                local pet = randomPet(eggName)
+                local old = egg:FindFirstChild("FakePetESP")
+                if old then old:Destroy() end
+
+                local gui = Instance.new("BillboardGui")
+                gui.Name = "FakePetESP"
+                gui.Adornee = egg:FindFirstChildWhichIsA("BasePart") or egg.PrimaryPart or egg
+                gui.Size = UDim2.new(0, 200, 0, 50)
+                gui.StudsOffset = Vector3.new(0, 3.5, 0)
+                gui.AlwaysOnTop = true
+                gui.Parent = egg
+
+                local lbl = Instance.new("TextLabel", gui)
+                lbl.Size = UDim2.new(1, 0, 1, 0)
+                lbl.BackgroundTransparency = 1
+                lbl.Text = "🎲 Rolling..."
+                lbl.TextColor3 = Color3.fromHSV(0, 1, 1)
+                lbl.TextStrokeTransparency = 0.3
+                lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+                lbl.TextSize = 20
+                lbl.Font = Enum.Font.Gotham
+                lbl.Name = "PetESP"
+
+                -- Rainbow animation
+                local hue = 0
+                local runConn
+                runConn = game:GetService("RunService").RenderStepped:Connect(function()
+                    if lbl and lbl.Parent then
+                        hue = (hue + 0.01) % 1
+                        lbl.TextColor3 = Color3.fromHSV(hue, 1, 1)
+                    else
+                        runConn:Disconnect()
+                    end
+                end)
+
+                -- Rolling pet names
+                task.spawn(function()
+                    local duration = 2
+                    local interval = 0.1
+                    local start = tick()
+                    local pets = eggChances[eggName]
+                    local keys = {}
+
+                    for petName in pairs(pets) do
+                        table.insert(keys, petName)
+                    end
+
+                    while tick() - start < duration do
+                        if lbl and lbl.Parent then
+                            lbl.Text = eggName .. " | " .. keys[math.random(#keys)]
+                        end
+                        task.wait(interval)
+                    end
+
+                    -- Final result
+                    lbl.Text = eggName .. " | " .. pet
+                end)
+            end
+        end
+
+        if not foundAny then
+            Rayfield:Notify({
+                Title = "No Eggs Found",
+                Content = "You don't own any '" .. eggName .. "' eggs.",
+                Duration = 3
+            })
+            return
+        end
+
+        cooldown = true
+        local timeLeft = 2
+        randomizerButton:Set("Name", "Cooldown: " .. timeLeft .. "s")
+        task.spawn(function()
+            while timeLeft > 0 do
+                task.wait(1)
+                timeLeft -= 1
+                randomizerButton:Set("Name", "Cooldown: " .. timeLeft .. "s")
+            end
+            cooldown = false
+            randomizerButton:Set("Name", "Randomizer")
+        end)
+    end
+})
+
+EggTab:CreateParagraph({
+    Title = "How does it work?",
+    Content = [[
+1. Put the egg name (case-sensitive).
+2. Click Randomize to preview a random pet roll.
+3. A rainbow ESP shows the rolling animation like a slot machine.
+4. Result locks in after 2 seconds.
+]]
+})
+
+
+-- 🌀 Dupe Tab (Equipped Item Only)
+local DupeTab = Window:CreateTab("🌀 Dupe", 7733961366)
+local multiplier = 2
+
+local function DupeEquippedItem()
+    local character = Players.LocalPlayer.Character
+    if character then
+        local tool = character:FindFirstChildOfClass("Tool")
+        if tool and not tool.Name:match("Seed") then
+            for i = 1, multiplier do
+                local clone = tool:Clone()
+                clone.Parent = Players.LocalPlayer.Backpack
+            end
+        else
+            Rayfield:Notify({
+                Title = "No Valid Tool",
+                Content = "Equip a tool (not a seed) to dupe.",
+                Duration = 3
+            })
+        end
+    end
+end
+
+DupeTab:CreateSlider({
+    Name = "Multiplier",
+    Range = {2, 100},
+    Increment = 1,
+    CurrentValue = 2,
+    Suffix = "x",
+    Callback = function(v)
+        multiplier = v
+    end
+})
+
+DupeTab:CreateButton({
+    Name = "Dupe Equipped Item",
+    Callback = DupeEquippedItem
+})
+
+DupeTab:CreateParagraph({
+    Title = "How does it work?",
+    Content = [[
+1. Equip a tool (like watering can or axe).
+2. Click 'Dupe Equipped Item' to create multiple copies in your backpack.
+3. Adjust the multiplier to control how many copies you get.
+]]
+})
+
+-- 🔬 Pet Mutation Finder Tab
+local MutationTab = Window:CreateTab("🔬 Pet Mutation Finder", 7734018437)
+
+local mutations = {
+    "Shiny", "Inverted", "Frozen", "Windy", "Golden", "Mega", "Tiny",
+    "Tranquil", "IronSkin", "Radiant", "Rainbow", "Shocked", "Ascended", "Tranquil"
+}
+local currentMutation = mutations[math.random(#mutations)]
+local espVisible = true
+
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local function findMachine()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and obj.Name:lower():find("mutation") then
+            return obj
+        end
+    end
+end
+
+local machine = findMachine()
+if not machine or not machine:FindFirstChildWhichIsA("BasePart") then
+    Rayfield:Notify({
+        Title = "Machine Not Found",
+        Content = "No mutation machine detected in Workspace.",
+        Duration = 5
+    })
+    return
+end
+
+local basePart = machine:FindFirstChildWhichIsA("BasePart")
+
+local espGui = Instance.new("BillboardGui", basePart)
+espGui.Name = "MutationESP"
+espGui.Adornee = basePart
+espGui.Size = UDim2.new(0, 200, 0, 40)
+espGui.StudsOffset = Vector3.new(0, 3, 0)
+espGui.AlwaysOnTop = true
+
+local espLabel = Instance.new("TextLabel", espGui)
+espLabel.Size = UDim2.new(1, 0, 1, 0)
+espLabel.BackgroundTransparency = 1
+espLabel.Font = Enum.Font.GothamBold
+espLabel.TextSize = 24
+espLabel.TextStrokeTransparency = 0.3
+espLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+espLabel.Text = currentMutation
+
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    if espVisible then
+        hue = (hue + 0.01) % 1
+        espLabel.TextColor3 = Color3.fromHSV(hue, 1, 1)
+    end
+end)
+
+local function animateMutationReroll()
+    local duration = 2
+    local interval = 0.1
+    espLabel.Text = "⏳ Rerolling..."
+    for i = 1, math.floor(duration / interval) do
+        espLabel.Text = mutations[math.random(#mutations)]
+        task.wait(interval)
+    end
+    currentMutation = mutations[math.random(#mutations)]
+    espLabel.Text = currentMutation
+end
+
+MutationTab:CreateButton({
+    Name = "🎲 Mutation Reroll",
+    Callback = animateMutationReroll
+})
+
+MutationTab:CreateButton({
+    Name = "👁 Toggle Mutation ESP",
+    Callback = function()
+        espVisible = not espVisible
+        espGui.Enabled = espVisible
+    end
+})
+
+MutationTab:CreateParagraph({
+    Title = "How does it work?",
+    Content = [[
+1. Automatically locates the Pet Mutation Machine in the map.
+2. Shows a floating ESP label with animated mutation text.
+3. Click "Mutation Reroll" to randomize the displayed mutation.
+4. Use "Toggle ESP" to show/hide the mutation label.
+]]
+})
+
+MutationTab:CreateParagraph({
+    Title = "Credit",
+    Content = "Made by KentNeedprofits"
+})
+
+-- 🍳 Cooking Event Tab
+local CookingTab = Window:CreateTab("🍳 Cooking Event", 7734018437)
+
+CookingTab:CreateParagraph({
+    Title = "Cooking Event Helper",
+    Content = [[
+Click the button below to collect food from the Cooking Pot event.
+]]
+})
+
+CookingTab:CreateButton({
+    Name = "🍲 Skip Cooking Cooldown",
+    Callback = function()
+        local success, err = pcall(function()
+            game:GetService("ReplicatedStorage").GameEvents.CookingPotService_RE:FireServer("GetFoodFromPot")
+        end)
+        
+        if success then
+            Rayfield:Notify({
+                Title = "Success",
+                Content = "Successfully requested food from pot!",
+                Duration = 2
+            })
+        else
+            Rayfield:Notify({
+                Title = "Error",
+                Content = "Failed to call remote: " .. tostring(err),
+                Duration = 3
+            })
+        end
+    end
+})
