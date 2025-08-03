@@ -401,7 +401,7 @@ CookingTab:CreateParagraph({
     Title = "Cooking Event Helper",
     Content = [[
 Click the button below to collect food from the Cooking Pot event.
-]]
+    ]]
 })
 
 CookingTab:CreateButton({
@@ -410,7 +410,7 @@ CookingTab:CreateButton({
         local success, err = pcall(function()
             game:GetService("ReplicatedStorage").GameEvents.CookingPotService_RE:FireServer("GetFoodFromPot")
         end)
-        
+
         if success then
             Rayfield:Notify({
                 Title = "Success",
@@ -425,4 +425,132 @@ CookingTab:CreateButton({
             })
         end
     end
+})
+
+local recipeData = {
+    Salad = [[
+Normal:
+⚫ 2x Tomato
+Mythical:
+1st Option: 1x Tomato, 1x Giant Pinecone
+Divine:
+1st Option: 3x Sugar Apple, 1x Pepper, 1x Pineapple
+2nd Option: 1x Strawberry, 1x Bell Pepper
+3rd Option: 2x Blood Banana, 2x Tomato
+Parismatic:
+1st Option: 1x Tomato
+4th Option: 1x Onion, 4x Bone Blossom, 1x Pear
+    ]],
+    Burger = [[
+Normal/Mythical:
+1st Option: 1x Pepper, 1x Corn, 1x Tomato
+2nd Option: 1x Pepper, 1x Corn, 1x Tomato, 1x Bone Blossom, 1x Beanstalk
+Divine:
+1st Option: 1x Corn, 4x Tomato, 3x Bone Blossom
+    ]],
+    Cake = [[
+Normal:
+1st Option: 2x Corn, 2x Strawberry
+Mythical:
+4th Option: 2x Banana, 2x Strawberry, 1x Pumpkin
+Divine:
+1st Option: 1x Banana, 4x Sugar Apple
+2nd Option: 2x Blueberry, 1x Corn, 1x Tomato
+3rd Option: 1x Ember Lily, 2x Peach
+Parismatic:
+1x Banana, 2x Banana, 2x Strawberry, 1x Pumpkin, 4x Bone Blossom
+    ]],
+    Sushi = [[
+Normal:
+1st Option: 4x Bamboo, 1x Corn
+Mythical:
+1st Option: 2x Bamboo, 1x Corn, 2x Bone Blossom
+Divine:
+1st Option: 1x Bamboo, 1x Corn, 3x Bone Blossom
+Parismatic:
+1st Option: 1x Bamboo, 4x Bone Blossom
+    ]],
+    Pizza = [[
+Normal:
+1st Option: 1x Banana, 1x Tomato
+Mythical:
+1st Option: 1x Pepper, 1x Tomato, 1x Corn, 2x Sugar Apple
+Divine:
+1st Option: 1x Sugar Apple, 1x Pepper, 1x Banana
+2nd Option: 1x Ember Lily, 1x Corn, 1x Tomato
+Parismatic:
+1st Option: 1x Giant Pinecone, 1x Apple, 1x Pepper, 1x Banana, 1x Mushroom
+    ]],
+    Donut = [[
+Normal:
+1st Option: 1x Strawberry, 1x Tomato, 1x Apple
+2nd Option: 2x Corn
+3rd Option: 2x Corn, 1x Banana, 1x Watermelon, 1x Pumpkin
+Mythical:
+1st Option: 2x Sugar Apple, 1x Corn
+Divine:
+1st Option: 1x Bone Blossom, 1x Sugar Apple, 1x Banana
+    ]],
+    Icecream = [[
+Normal:
+1st Option: 1x Corn, 1x Blueberry
+2nd Option: 3x Sugar Apple, 1x Corn
+Mythical:
+1st/2nd Option: 3x Sugar Apple, 1x Banana, 1x Corn
+Legendary:
+1st Option: 2x Banana
+Divine:
+1st Option: 1x Sugar Apple, 1x Sugarglaze
+Parismatic:
+1st Option: 1x Sugarglaze, 1x Sugar Apple, 3x Bone Blossom
+2nd Option: 1x Banana, 1x Sugar Apple, 3x Bone Blossom
+    ]],
+    Hotdog = [[
+Normal:
+1st Option: 1x Pepper, 1x Corn or Banana
+Parismatic:
+1st Option: 1x Corn, 4x Bone Blossom
+2nd Option: 2x Corn, 1x Watermelon
+3rd Option: 1x Pink Lily, 1x Elephant Ears, 1x Bone Blossom, 1x Violet Corn
+    ]],
+    Waffle = [[
+Normal:
+1st Option: 1x Pumpkin, 1x Watermelon
+2nd Option: 1x Sugar Apple, 1x Watermelon
+3rd Option: 1x Strawberry, 1x Coconut
+Divine:
+1st Option: 1x Sugar Apple, 1x Coconut
+    ]],
+    Pie = [[
+Normal:
+1st Option: 1x Sugar Apple, 1x Pumpkin, 1x Giant Pinecone, 1x Apple
+Legendary:
+1st Option: 1x Corn, 1x Pumpkin
+Mythical:
+1st Option: 1x Moon Melon
+Divine:
+1st Option: 1x Elder Strawberry, 1x Mango, 1x Giant Pinecone, 1x Coconut, 1x Beanstalk
+Parismatic:
+1st Option: 4x Bone Blossom, 1x Pumpkin, 1x Apple, 1x Pumpkin
+    ]]
+}
+
+local selectedDish = nil
+local dishInfoParagraph = nil
+
+CookingTab:CreateDropdown({
+    Name = "Select Dish",
+    Options = table.keys(recipeData),
+    CurrentOption = nil,
+    Callback = function(dish)
+        selectedDish = dish
+        if dishInfoParagraph then
+            dishInfoParagraph:Set("Content", recipeData[dish])
+        end
+    end
+})
+
+dishInfoParagraph = CookingTab:CreateParagraph({
+    Title = "Recipe Information",
+    Content = "Select a dish above to view recipe options."
 })
