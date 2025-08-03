@@ -405,7 +405,7 @@ Click the button below to collect food from the Cooking Pot event.
 })
 
 CookingTab:CreateButton({
-    Name = "🍲 Skip Cooking Cooldown",
+    Name = "🍲 Skip Cooking Cooldown [PATCHED]",
     Callback = function()
         local success, err = pcall(function()
             game:GetService("ReplicatedStorage").GameEvents.CookingPotService_RE:FireServer("GetFoodFromPot")
